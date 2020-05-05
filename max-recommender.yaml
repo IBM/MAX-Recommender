@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: max-recommender
+spec:
+  selector:
+    app: max-recommender
+  ports:
+  - port: 5000
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: max-recommender
+  labels:
+    app: max-recommender
+spec:
+  selector:
+    matchLabels:
+      app: max-recommender
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: max-recommender
+    spec:
+      containers:
+      - name: max-recommender
+        image: codait/max-recommender:latest
+        ports:
+        - containerPort: 5000

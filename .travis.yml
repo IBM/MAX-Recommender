@@ -1,0 +1,14 @@
+language: python
+python:
+  - 3.7
+services:
+  - docker
+install:
+  - docker build -t max-rec .
+  - docker run -it -d -p 5000:5000 max-rec
+  - pip install pytest requests flake8
+before_script:
+  - flake8 . --max-line-length=127 --exclude training/training_code/dataset
+  - sleep 30
+script:
+  - pytest tests/test.py
