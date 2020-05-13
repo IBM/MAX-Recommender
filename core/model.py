@@ -20,6 +20,7 @@ import pickle
 import pandas as pd
 import numpy as np
 import logging
+from flask import abort
 from config import DEFAULT_MODEL_PATH, MODEL_META_DATA as model_meta
 
 from core.NCF import NCF
@@ -66,7 +67,10 @@ class ModelWrapper(MAXModelWrapper):
 
     def _predict(self, input_args):
         user = input_args['user_id']
-        user_id = self.user_to_id_mapping[user]
+        try:
+            user_id = self.user_to_id_mapping[user]
+        except KeyError:
+            abort(400, "Unknown user ID.")
         raw_preds = self.model.predict(np.tile(user_id, self.len_item_ids), self.item_ids, is_list=True)
         predictions = [[user, i, p] for i, p in zip(self.items, raw_preds)]
         predictions_sorted = pd.DataFrame(predictions, columns=['user', 'item', 'prediction']) \
