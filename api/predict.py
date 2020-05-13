@@ -16,12 +16,12 @@
 
 from core.model import ModelWrapper
 from maxfw.core import MAX_API, PredictAPI
-from flask_restplus import fields
+from flask_restplus import fields, inputs
 
 # Set up parser for input data (http://flask-restplus.readthedocs.io/en/stable/parsing.html)
 input_parser = MAX_API.parser()
 input_parser.add_argument('user_id', type=str, required=True, help='User ID to generate recommendations for')
-input_parser.add_argument('num_results', type=int, required=False, default=5, help='Number of items to return')
+input_parser.add_argument('num_results', type=inputs.positive, required=False, default=5, help='Number of items to return')
 
 
 # Creating a JSON response model: https://flask-restplus.readthedocs.io/en/stable/marshalling.html#the-api-model-factory
