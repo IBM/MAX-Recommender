@@ -61,6 +61,15 @@ def test_response():
     # add sanity checks here
 
 
+def test_predict_invalid_user_id():
+    model_endpoint = 'http://localhost:5000/model/predict'
+
+    data = {'user_id': 'aaa',
+            'num_results': 5}
+    r = requests.post(url=model_endpoint, data=data)
+    assert r.status_code == 400
+
+
 def test_predict_non_positive_results():
     model_endpoint = 'http://localhost:5000/model/predict'
 
