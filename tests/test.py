@@ -70,5 +70,15 @@ def test_predict_invalid_user_id():
     assert r.status_code == 400
 
 
+def test_predict_non_positive_results():
+    model_endpoint = 'http://localhost:5000/model/predict'
+
+    for num_results in (-1, 0):
+        data = {'user_id': "1",
+                'num_results': num_results}
+        r = requests.post(url=model_endpoint, data=data)
+        assert r.status_code == 400
+
+
 if __name__ == '__main__':
     pytest.main([__file__])
