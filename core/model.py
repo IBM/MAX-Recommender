@@ -16,7 +16,7 @@
 
 from maxfw.model import MAXModelWrapper
 
-import pickle
+import pickle  # nosec - B301:blacklist - using pickle for known files
 import pandas as pd
 import numpy as np
 import logging
@@ -36,13 +36,13 @@ class ModelWrapper(MAXModelWrapper):
         logger.info('Loading model from: {}...'.format(path))
 
         with open('assets/user_mapping.p', 'rb') as fp:
-            self.user_to_id_mapping = pickle.load(fp)
+            self.user_to_id_mapping = pickle.load(fp)  # nosec - B301:blacklist - known file
 
         with open('assets/item_mapping.p', 'rb') as fp:
-            self.item_to_id_mapping = pickle.load(fp)
+            self.item_to_id_mapping = pickle.load(fp)  # nosec - B301:blacklist - known file
 
         with open('assets/parameters.p', 'rb') as fp:
-            self.parameters = pickle.load(fp)
+            self.parameters = pickle.load(fp)  # nosec - B301:blacklist - known file
 
         self.users = [user for user in self.user_to_id_mapping]
         self.items = [item for item in self.item_to_id_mapping]

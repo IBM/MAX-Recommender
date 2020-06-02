@@ -307,7 +307,9 @@ class NCF:
         # concat pretrain h_from_gmf and h_from_mlp
         vars_list = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="ncf")
 
-        assert len(vars_list) == 1
+        if len(vars_list) != 1:
+            raise ValueError("vars_list must have length = 1, got: %r" % len(vars_list))
+
         ncf_fc = vars_list[0]
 
         # get weight from gmf and mlp
