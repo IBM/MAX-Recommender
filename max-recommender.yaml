@@ -27,6 +27,6 @@ spec:
     spec:
       containers:
       - name: max-recommender
-        image: codait/max-recommender:latest
+        image: quay.io/codait/max-recommender:latest
         ports:
         - containerPort: 5000
