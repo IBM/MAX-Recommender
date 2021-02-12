@@ -118,7 +118,7 @@ If you wish to train the model on data contained in the file `ratings.csv` for 5
 2. Run `setup_max_model_training` and follow the prompts to configure model training.
 
   ```
-    $ ./setup_max_model_training max-ncf-training-config.yaml
+    $ ./setup_max_model_training max-recommender-training-config.yaml
      ...
      ------------------------------------------------------------------------------
      Model training setup is complete and your configuration file was updated.
@@ -129,7 +129,7 @@ If you wish to train the model on data contained in the file `ratings.csv` for 5
      Compute configuration       : k80     
   ```
 
-  > On Microsoft Windows run `python setup_max_model_training max-ncf-training-config.yaml`.
+  > On Microsoft Windows run `python setup_max_model_training max-recommender-training-config.yaml`.
 
   The setup script updates the training configuration file using the information you've provided. For security reasons, confidential information, such as API keys or passwords, are _not_ stored in this file. Instead the script displays a set of environment variables that you must define to make this information available to the training script.
 
@@ -169,7 +169,7 @@ Complete the following steps in the terminal window where the earlier mentioned 
 1. Verify that the training preparation steps complete successfully.
 
    ```
-    $ python train_max_model.py max-ncf-training-config.yaml prepare
+    $ python train_max_model.py max-recommender-training-config.yaml prepare
      ...
      # --------------------------------------------------------
      # Checking environment variables ...
@@ -180,13 +180,13 @@ Complete the following steps in the terminal window where the earlier mentioned 
    If preparation completed successfully:
 
     - Training data is present in the Cloud Object Storage bucket that WML will access during model training.
-    - Model training code is packaged `max-ncf-model-building-code.zip`
+    - Model training code is packaged `max-recommender-model-building-code.zip`
 
 
 2. Start model training.
 
    ```
-   $ python train_max_model.py max-ncf-training-config.yaml package
+   $ python train_max_model.py max-recommender-training-config.yaml package
     ...
     # --------------------------------------------------------
     # Starting model training ...
@@ -195,7 +195,7 @@ Complete the following steps in the terminal window where the earlier mentioned 
     Training run name     : train-max-...
     Training data bucket  : ...
     Results bucket        : ...
-    Model-building archive: max-ncf-model-building-code.zip
+    Model-building archive: max-recommender-model-building-code.zip
     Model training was started. Training id: model-...
     ...
    ```
@@ -216,7 +216,7 @@ Complete the following steps in the terminal window where the earlier mentioned 
    To **restart** monitoring, run the following command, replacing `<training-id>` with the id that was displayed when you started model training. 
    
       ```
-      python train_max_model.py max-ncf-training-config.yaml package <training-id>
+      python train_max_model.py max-recommender-training-config.yaml package <training-id>
       ```
 
    To **cancel** the training run, press `Ctrl+C` twice.
