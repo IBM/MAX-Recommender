@@ -4,6 +4,7 @@
 import os
 import numpy as np
 import tensorflow as tf
+import tf_slim as slim
 from time import time
 import logging
 
@@ -54,8 +55,9 @@ class NCF:
 
         """
 
+        tf.compat.v1.disable_eager_execution()
         # seed
-        tf.set_random_seed(seed)
+        tf.compat.v1.set_random_seed(seed)
         np.random.seed(seed)
         self.seed = seed
 
@@ -83,28 +85,28 @@ class NCF:
         # create ncf model
         self._create_model()
         # set GPU use with demand growth
-        gpu_options = tf.GPUOptions(allow_growth=True)
+        gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
         # set TF Session
-        self.sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+        self.sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_options))
         # parameters initialization
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
     def _create_model(self,):
         # reset graph
-        tf.reset_default_graph()
+        tf.compat.v1.reset_default_graph()
 
-        with tf.variable_scope("input_data", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("input_data", reuse=tf.compat.v1.AUTO_REUSE):
 
             # input: index of users, items and ground truth
-            self.user_input = tf.placeholder(tf.int32, shape=[None, 1])
-            self.item_input = tf.placeholder(tf.int32, shape=[None, 1])
-            self.labels = tf.placeholder(tf.float32, shape=[None, 1])
+            self.user_input = tf.compat.v1.placeholder(tf.int32, shape=[None, 1])
+            self.item_input = tf.compat.v1.placeholder(tf.int32, shape=[None, 1])
+            self.labels = tf.compat.v1.placeholder(tf.float32, shape=[None, 1])
 
-        with tf.variable_scope("embedding", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("embedding", reuse=tf.compat.v1.AUTO_REUSE):
 
             # set embedding table
             self.embedding_gmf_P = tf.Variable(
-                tf.truncated_normal(
+                tf.random.truncated_normal(
                     shape=[self.n_users, self.n_factors], mean=0.0, stddev=0.01, seed=self.seed,
                 ),
                 name="embedding_gmf_P",
@@ -112,7 +114,7 @@ class NCF:
             )
 
             self.embedding_gmf_Q = tf.Variable(
-                tf.truncated_normal(
+                tf.random.truncated_normal(
                     shape=[self.n_items, self.n_factors], mean=0.0, stddev=0.01, seed=self.seed,
                 ),
                 name="embedding_gmf_Q",
@@ -121,7 +123,7 @@ class NCF:
 
             # set embedding table
             self.embedding_mlp_P = tf.Variable(
-                tf.truncated_normal(
+                tf.random.truncated_normal(
                     shape=[self.n_users, int(self.layer_sizes[0] / 2)],
                     mean=0.0,
                     stddev=0.01,
@@ -132,7 +134,7 @@ class NCF:
             )
 
             self.embedding_mlp_Q = tf.Variable(
-                tf.truncated_normal(
+                tf.random.truncated_normal(
                     shape=[self.n_items, int(self.layer_sizes[0] / 2)],
                     mean=0.0,
                     stddev=0.01,
@@ -142,7 +144,7 @@ class NCF:
                 dtype=tf.float32,
             )
 
-        with tf.variable_scope("gmf", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("gmf", reuse=tf.compat.v1.AUTO_REUSE):
 
             # get user embedding p and item embedding q
             self.gmf_p = tf.reduce_sum(
@@ -155,7 +157,7 @@ class NCF:
             # get gmf vector
             self.gmf_vector = self.gmf_p * self.gmf_q
 
-        with tf.variable_scope("mlp", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("mlp", reuse=tf.compat.v1.AUTO_REUSE):
 
             # get user embedding p and item embedding q
             self.mlp_p = tf.reduce_sum(
@@ -170,37 +172,37 @@ class NCF:
 
             # MLP Layers
             for layer_size in self.layer_sizes[1:]:
-                output = tf.contrib.layers.fully_connected(
+                output = slim.layers.fully_connected(
                     output,
                     num_outputs=layer_size,
                     activation_fn=tf.nn.relu,
-                    weights_initializer=tf.contrib.layers.xavier_initializer(seed=self.seed),
+                    weights_initializer=slim.layers.initializers.xavier_initializer(seed=self.seed),
                 )
             self.mlp_vector = output
 
             # self.output = tf.sigmoid(tf.reduce_sum(self.mlp_vector, axis=1, keepdims=True))
 
-        with tf.variable_scope("ncf", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("ncf", reuse=tf.compat.v1.AUTO_REUSE):
 
             if self.model_type == "gmf":
                 # GMF only
-                output = tf.contrib.layers.fully_connected(
+                output = slim.layers.fully_connected(
                     self.gmf_vector,
                     num_outputs=1,
                     activation_fn=None,
                     biases_initializer=None,
-                    weights_initializer=tf.contrib.layers.xavier_initializer(seed=self.seed),
+                    weights_initializer=slim.layers.initializers.xavier_initializer(seed=self.seed),
                 )
                 self.output = tf.sigmoid(output)
 
             elif self.model_type == "mlp":
                 # MLP only
-                output = tf.contrib.layers.fully_connected(
+                output = slim.layers.fully_connected(
                     self.mlp_vector,
                     num_outputs=1,
                     activation_fn=None,
                     biases_initializer=None,
-                    weights_initializer=tf.contrib.layers.xavier_initializer(seed=self.seed),
+                    weights_initializer=slim.layers.initializers.xavier_initializer(seed=self.seed),
                 )
                 self.output = tf.sigmoid(output)
 
@@ -208,24 +210,24 @@ class NCF:
                 # concatenate GMF and MLP vector
                 self.ncf_vector = tf.concat([self.gmf_vector, self.mlp_vector], 1)
                 # get predicted rating score
-                output = tf.contrib.layers.fully_connected(
+                output = slim.layers.fully_connected(
                     self.ncf_vector,
                     num_outputs=1,
                     activation_fn=None,
                     biases_initializer=None,
-                    weights_initializer=tf.contrib.layers.xavier_initializer(seed=self.seed),
+                    weights_initializer=slim.layers.initializers.xavier_initializer(seed=self.seed),
                 )
                 self.output = tf.sigmoid(output)
 
-        with tf.variable_scope("loss", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("loss", reuse=tf.compat.v1.AUTO_REUSE):
 
             # set loss function
-            self.loss = tf.losses.log_loss(self.labels, self.output)
+            self.loss = tf.compat.v1.losses.log_loss(self.labels, self.output)
 
-        with tf.variable_scope("optimizer", reuse=tf.AUTO_REUSE):
+        with tf.compat.v1.variable_scope("optimizer", reuse=tf.compat.v1.AUTO_REUSE):
 
             # set optimizer
-            self.optimizer = tf.train.AdamOptimizer(
+            self.optimizer = tf.compat.v1.train.AdamOptimizer(
                 learning_rate=self.learning_rate
             ).minimize(self.loss)
 
@@ -239,7 +241,7 @@ class NCF:
         # save trained model
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
-        saver = tf.train.Saver()
+        saver = tf.compat.v1.train.Saver()
         saver.save(self.sess, os.path.join(dir_name, MODEL_CHECKPOINT))
 
     def load(self, gmf_dir=None, mlp_dir=None, neumf_dir=None, alpha=0.5):
@@ -260,15 +262,15 @@ class NCF:
 
         # load pre-trained model
         if self.model_type == "gmf" and gmf_dir is not None:
-            saver = tf.train.Saver()
+            saver = tf.compat.v1.train.Saver()
             saver.restore(self.sess, os.path.join(gmf_dir, MODEL_CHECKPOINT))
 
         elif self.model_type == "mlp" and mlp_dir is not None:
-            saver = tf.train.Saver()
+            saver = tf.compat.v1.train.Saver()
             saver.restore(self.sess, os.path.join(mlp_dir, MODEL_CHECKPOINT))
 
         elif self.model_type == "neumf" and neumf_dir is not None:
-            saver = tf.train.Saver()
+            saver = tf.compat.v1.train.Saver()
             saver.restore(self.sess, os.path.join(neumf_dir, MODEL_CHECKPOINT))
 
         elif self.model_type == "neumf" and gmf_dir is not None and mlp_dir is not None:
@@ -289,7 +291,7 @@ class NCF:
             val for val in variables if "gmf" in val.name and "ncf" not in val.name
         ]
         # load 'gmf' variable
-        saver = tf.train.Saver(var_flow_restore)
+        saver = tf.compat.v1.train.Saver(var_flow_restore)
         # restore
         saver.restore(self.sess, os.path.join(gmf_dir, MODEL_CHECKPOINT))
 
@@ -300,7 +302,7 @@ class NCF:
             val for val in variables if "mlp" in val.name and "ncf" not in val.name
         ]
         # load 'gmf' variable
-        saver = tf.train.Saver(var_flow_restore)
+        saver = tf.compat.v1.train.Saver(var_flow_restore)
         # restore
         saver.restore(self.sess, os.path.join(mlp_dir, MODEL_CHECKPOINT))
 
@@ -313,8 +315,8 @@ class NCF:
         ncf_fc = vars_list[0]
 
         # get weight from gmf and mlp
-        gmf_fc = tf.contrib.framework.load_variable(gmf_dir, ncf_fc.name)
-        mlp_fc = tf.contrib.framework.load_variable(mlp_dir, ncf_fc.name)
+        gmf_fc = slim.framework.load_variable(gmf_dir, ncf_fc.name)
+        mlp_fc = slim.framework.load_variable(mlp_dir, ncf_fc.name)
 
         # load fc layer by tf.concat
         assign_op = tf.assign(
