@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-FROM quay.io/codait/max-base:v1.4.0
+FROM quay.io/codait/max-base:v1.5.1
 
 # Fill in these with a link to the bucket containing the model and the model file name
 ARG model_bucket=https://max-cdn.cdn.appdomain.cloud/max-recommender/1.0.0
